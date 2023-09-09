@@ -1,87 +1,177 @@
-# ライブラリの読み込み
-Add-Type -AssemblyName System.Drawing
+# 元のファイルがあるフォルダを指定
+$SourceFolder = "C:\Users\cyan\Pictures\test\dummyfolder - コピー"
 
-# 元のファイルがあるディレクトリを指定
-$sourceFolder = "N:\cyan\pool"
+# 分類されたファイルを格納するフォルダを指定
+$TargetFolder = "C:\Users\cyan\Pictures\test\sortedfolder"
 
-# 分類されたファイルを格納するディレクトリを指定
-$targetFolder = "N:\cyan\pictures"
+# ログ出力先
+$LogFile = "$TargetFolder\Log.txt"
 
-# メッセージ
-Write-Output 写真と動画の整理を開始します
-Write-Output ("移動前のディレクトリ: " + $sourceFolder)
-Write-Output ("移動後のディレクトリ: " + $targetFolder)
 
-# 画像ファイルと動画ファイルの拡張子を指定
-$files = Get-ChildItem -Path $sourceFolder -Recurse | Where-Object { $_.Extension -match "(jpg|jpeg|png|gif|bmp|mp4|mov|avi|wmv|flv|mkv)" }
+########################
 
-# 撮影日時を取得する関数
-function getTakenDate($file){
-
-    # Exif情報を取得
-    $private:properties = $file.PropertyItems
-    Write-Output $properties
-    foreach($property in $properties){
-        if($property.Id -eq 36867){ #0x9003 PropertyTagExifDTOrig
-            # $takenDate = $property.Value
-            $takenDate = [System.Text.Encoding]::ASCII.GetString($property.Value)
-            break
-        }
-    }
-
-    return $takenDate
+function Log($LogFile, $str) {
+    Write-Output $str
+    
+    # ログを出力しない場合は以下をコメントアウト
+    Add-Content  $str -Path $LogFile -Encoding UTF8
 }
 
-function getOldest() {
-    # WIP
+function getTakenDate($SourceImage) {
+    Add-Type -AssemblyName System.Drawing
+
+    # 撮影日時をバイト列で取得
+    $ByteAry = ($SourceImage.PropertyItems | Where-Object{$_.Id -eq 36867}).Value
+
+    # 撮影日時を取得できたとき
+    if ($null -ne $ByteAry) {
+
+        # 日付の区切り文字を:から/に変換
+        $ByteAry[4] = 47
+        $ByteAry[7] = 47
+
+        # バイト列を文字列に変換
+        [String]$DateStr = [System.Text.Encoding]::ASCII.GetString($ByteAry)
+
+        # Exif情報の日付を設定
+        $TakenDate = [datetime]$DateStr
+
+        return $TakenDate
+
+    } else {
+
+        return $null
+
+    }
 }
 
 function main() {
 
-    # フォルダ内のすべてのファイルに処理を実行
-    foreach ($file in $files) {
+    # フォルダ、サブフォルダ内のファイルをすべて表示
+    $Files = Get-ChildItem -Path $SourceFolder -Recurse | Where-Object { $_.Extension -match "(jpg|jpeg|png|gif|bmp|heic|mp4|mov|avi|wmv|flv|mkv)" }
 
-        # ファイルの作成日時を取得
-        $creationDate = $file.CreationTime
+    # フォルダ、サブフォルダ内の、拡張子がマッチするファイルをすべて表示
+    $Pics = $Files | Where-Object { $_.Extension -match "(jpg|jpeg|png|gif|bmp|heic|mp4|mov|avi|wmv|flv|mkv)" }
 
-        # ファイルの更新日時を取得
-        $updateDate = $file.LastWriteTime
+    # カウンター関連
+    $BeforePicsCount = $Pics.Count  # 写真と動画ファイルの合計数
+    $SuccessCount    = 0            # ファイル移動に成功した数
 
-        # ファイルの撮影日時を取得
-        $takenDate = getTakenDate $file
-        Write-Output ("takenDate = " + $takenDate)
-        # $takenDate = (Get-ItemProperty $file.FullName).DateTaken
-        # $takenDate = (Get-ItemProperty $file.FullName).DateTaken
-        # ($img.PropertyItems | Where-Object{$_.Id -eq 36867}).Value
+    # ログ
+    $Date = (Get-Date -Format "yyyy/MM/dd HH:mm:ss") + " >"
+    $Empty = "                     "
 
-        # 作成日時、更新日時、撮影日時から最も古いものを取得
-        $oldestDate = $creationDate
-        if ($updateDate -lt $oldestDate) {
-            $oldestDate = $updateDate
+    # ログ出力
+    if ($Files.Count -eq 0) {
+        Log $LogFile "$Date フォルダは空です。"
+    }
+
+    if ($Files.Count - $Pics.Count -gt 0){
+        Log $LogFile "$Date " + ($Files.Count - $Pics.Count) + "個のファイルは写真または動画ファイルではありません。"
+    }
+
+    if ($Pics.Count -eq 0) {
+        if ($Files.Count -ne 0) {
+            Log $LogFile "$Date 移動するファイルはありません。"
         }
+    } else {
+        Log $LogFile "$Date 写真と動画ファイルの移動を開始します。`n$Empty 移動前のフォルダ: $SourceFolder`n$Empty 移動先のフォルダ: $TargetFolder\~"
+        
+        # フォルダ内のすべてのファイルに処理を実行
+        $LoopIndex = 0
+        foreach ($File in $Pics) {
+            
+            # 作成日時を取得
+            $CreationDate = $File.CreationTime
+            
+            # 更新日時を取得
+            $UpdateDate = $File.LastWriteTime
+            
+            # 撮影日時を取得
+            $TakenDate = $null
+            if ($File.Extention -match "(jpg|jpeg|heic)") {
+                
+                $SourceImage = New-Object System.Drawing.Bitmap($File.FullName)
+                try {
+                    $SourceImage = New-Object System.Drawing.Bitmap($File.FullName)
+                } catch {
+                    Log $LogFile "$Date $File の読み込みに失敗しました。"
+                }
+                $TakenDate = getTakenDate $SourceImage
+                $SourceImage.Dispose()
+            }
 
-        # デバッグ
-        Write-Output ($file.FullName + "   " + $creationDate + "   " + $updateDate + "   " + $takenDate + "   " + $oldestDate)
-
-        # 年月日を取得
-        $year = $creationDate.Year.ToString()
-        $month = $creationDate.Month.ToString("00")
-        $day = $creationDate.Day.ToString("00")
-
-        # 格納先のディレクトリを作成
-        $targetDirectory = $targetFolder + "\" + $year + "\" + $month + "\" + $day
-
-        # ディレクトリが存在しない場合は作成
-        if (!(Test-Path $targetDirectory)) {
-            New-Item -ItemType Directory -Path $targetDirectory | Out-Null
+            # 最も古い日時を取得
+            $OldestDate = $CreationDate
+            if ($UpdateDate -lt $OldestDate) {
+                $OldestDate = $UpdateDate
+            }
+            if ($null -ne $TakenDate) {
+                if ($TakenDate -lt $OldestDate) {
+                    $OldestDate = $TakenDate
+                }
+            }
+            
+            # 年月日を取得
+            $Year  = $OldestDate.Year.ToString()
+            $Month = $OldestDate.Month.ToString("00")
+            $Day   = $OldestDate.Day.ToString("00")
+            
+            # 格納先のパスを作成
+            $SubDirectory = "$Year\$Month\$Year-$Month-$Day"
+            $TargetDirectory = "$TargetFolder\$SubDirectory"
+            
+            # フォルダが存在しない場合は作成
+            if (!(Test-Path $TargetDirectory)) {
+                try {
+                    New-Item -ItemType Directory -Path $TargetDirectory | Out-Null
+                    
+                    # Log $LogFile "$Date $TargetDirectory を作成しました。"
+                    
+                } catch {
+                    Log $LogFile "$Date $TargetDirectory を作成できませんでした。"
+                }
+            }
+            
+            # ログに出力するファイル名を作成
+            if ($File.Name.Length -gt 30) {
+                # 長い文字列を30でカットして空白埋め
+                $PaddedFileName = $File.Name.Remove(30).PadRight(30)
+            } else {
+                # 空白埋め
+                $PaddedFileName = $File.Name.PadRight(30)
+            }
+            
+            # ファイルを移動
+            try {
+                Move-Item -Path $File.FullName -Destination $TargetDirectory
+                
+                # Log $LogFile "$Date $PaddedFileName は ~\$SubDirectory へ移動されました。"
+                $SuccessCount++
+            } catch {
+                Log $LogFile "$Date $PaddedFileName は ~\$TargetDirectory への移動に失敗しました。"
+            }
+            
+            # プログレスバーを表示
+            $LoopIndex++
+            $Percent = [int32]($LoopIndex*100/$BeforePicsCount)
+            Write-Progress -Activity "Move in Progress" -Status "$LoopIndex/$BeforePicsCount Complete." -PercentComplete $Percent
         }
+        
+        # ログ出力
+        # フォルダ、サブフォルダ内のファイル
+        $Files = Get-ChildItem -Path $SourceFolder -Recurse | Where-Object { $_.Extension -match "(jpg|jpeg|png|gif|bmp|heic|mp4|mov|avi|wmv|flv|mkv)" }
 
-        # ファイルを移動
-        Move-Item -Path $file.FullName -Destination $targetDirectory
-        Write-Output ($file.Name + " を移動しました。")
+        # フォルダ、サブフォルダ内の、拡張子がマッチするファイル
+        $Pics = $Files | Where-Object { $_.Extension -match "(jpg|jpeg|png|gif|bmp|heic|mp4|mov|avi|wmv|flv|mkv)" }
+
+        Log $LogFile "$Date $SuccessCount 個のファイルの移動が完了しました。"
+        
+        if ($Pics.Count -ne 0) {
+            Log $LogFile ("$Date " + [String]$Pics.Count + " 個のファイルは移動できませんでした。")
+        }
     }
 }
 
-# 処理の実行
 main
 pause
