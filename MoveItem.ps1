@@ -1,39 +1,75 @@
-# Œ³‚Ìƒtƒ@ƒCƒ‹‚ª‚ ‚éƒtƒHƒ‹ƒ_‚ğw’è
-$SourceFolder = "C:\Users\cyan\Pictures\test\dummyfolder - ƒRƒs["
+ï»¿# å…ƒã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒã‚ã‚‹ãƒ•ã‚©ãƒ«ãƒ€ã‚’æŒ‡å®š
+$SourceFolder = "C:\Users\cyan\Pictures\test\dummyfolder - ã‚³ãƒ”ãƒ¼"
 
-# •ª—Ş‚³‚ê‚½ƒtƒ@ƒCƒ‹‚ğŠi”[‚·‚éƒtƒHƒ‹ƒ_‚ğw’è
+# åˆ†é¡ã•ã‚ŒãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’æ ¼ç´ã™ã‚‹ãƒ•ã‚©ãƒ«ãƒ€ã‚’æŒ‡å®š
 $TargetFolder = "C:\Users\cyan\Pictures\test\sortedfolder"
 
-# ƒƒOo—Íæ
-$LogFile = "$TargetFolder\Log.txt"
+# ãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã®å‡ºåŠ›ãƒ‘ã‚¹
+$LogFilePath = "$TargetFolder\Log.txt"
+
+# ãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’å‡ºåŠ›ã™ã‚‹ã‹ã©ã†ã‹ ( $true / $false )
+$LogFileFlag = $true
 
 
-########################
+######## ã“ã“ã‹ã‚‰å…ˆã¯ã„ã˜ã‚‰ãªã„ ########
 
-function Log($LogFile, $str) {
-    Write-Output $str
-    
-    # ƒƒO‚ğo—Í‚µ‚È‚¢ê‡‚ÍˆÈ‰º‚ğƒRƒƒ“ƒgƒAƒEƒg
-    Add-Content  $str -Path $LogFile -Encoding UTF8
+
+function Log($str) {
+    $date = (Get-Date -Format "yyyy/MM/dd HH:mm:ss") + " > "
+    Write-Host $date$str
+        
+    # ãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’å‡ºåŠ›
+    if ($LogFileFlag) {
+        Add-Content $str -Path $LogFilePath -Encoding UTF8
+    }
 }
 
-function getTakenDate($SourceImage) {
+function MessageBefore($FilesCount, $ItemsCount) {
+
+    if ($FilesCount -eq 0) {    # ãƒ•ã‚©ãƒ«ãƒ€ãŒç©ºã®ã¨ã
+        Log "ãƒ•ã‚©ãƒ«ãƒ€ã¯ç©ºã§ã™ã€‚"
+    } else {    # ãƒ•ã‚©ãƒ«ãƒ€ãŒç©ºã§ã¯ãªã„ã¨ã
+
+        # å†™çœŸã¾ãŸã¯å‹•ç”»ã§ã¯ãªã„ãƒ•ã‚¡ã‚¤ãƒ«
+        $OtherFileCount = $FilesCount - $ItemsCount
+        if ($OtherFileCount -gt 0) {
+            Log "$OtherFileCount å€‹ã®ãƒ•ã‚¡ã‚¤ãƒ«ã¯å†™çœŸã¾ãŸã¯å‹•ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚"
+        }
+
+        # å†™çœŸã¾ãŸã¯å‹•ç”»
+        if ($ItemsCount -eq 0) {
+            Log "ç§»å‹•ã™ã‚‹ãƒ•ã‚¡ã‚¤ãƒ«ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚"
+        } else {
+            Log ([String]$ItemsCount + " å€‹ã®å†™çœŸã¾ãŸã¯å‹•ç”»ãƒ•ã‚¡ã‚¤ãƒ«ãŒè¦‹ã¤ã‹ã‚Šã¾ã—ãŸã€‚ãƒ•ã‚¡ã‚¤ãƒ«ã®ç§»å‹•ã‚’é–‹å§‹ã—ã¾ã™ã€‚")
+        }
+
+    }
+}
+
+function MessageAfter($SuccessCount, $FailureCount) {
+    Log "$SuccessCount å€‹ã®ãƒ•ã‚¡ã‚¤ãƒ«ã®ç§»å‹•ãŒå®Œäº†ã—ã¾ã—ãŸã€‚"
+    if ($FailureCount -ne 0) {
+        Log "$FailureCount å€‹ã®ãƒ•ã‚¡ã‚¤ãƒ«ã¯ç§»å‹•ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚"
+    }
+}
+
+function GetTakenDate($SourceImage) {
     Add-Type -AssemblyName System.Drawing
 
-    # B‰e“ú‚ğƒoƒCƒg—ñ‚Åæ“¾
+    # æ’®å½±æ—¥æ™‚ã‚’ãƒã‚¤ãƒˆåˆ—ã§å–å¾—
     $ByteAry = ($SourceImage.PropertyItems | Where-Object{$_.Id -eq 36867}).Value
 
-    # B‰e“ú‚ğæ“¾‚Å‚«‚½‚Æ‚«
+    # æ’®å½±æ—¥æ™‚ã‚’å–å¾—ã§ããŸã¨ã
     if ($null -ne $ByteAry) {
 
-        # “ú•t‚Ì‹æØ‚è•¶š‚ğ:‚©‚ç/‚É•ÏŠ·
+        # æ—¥ä»˜ã®åŒºåˆ‡ã‚Šæ–‡å­—ã‚’:ã‹ã‚‰/ã«å¤‰æ›
         $ByteAry[4] = 47
         $ByteAry[7] = 47
 
-        # ƒoƒCƒg—ñ‚ğ•¶š—ñ‚É•ÏŠ·
+        # ãƒã‚¤ãƒˆåˆ—ã‚’æ–‡å­—åˆ—ã«å¤‰æ›
         [String]$DateStr = [System.Text.Encoding]::ASCII.GetString($ByteAry)
 
-        # Exifî•ñ‚Ì“ú•t‚ğİ’è
+        # Exifæƒ…å ±ã®æ—¥ä»˜ã‚’è¨­å®š
         $TakenDate = [datetime]$DateStr
 
         return $TakenDate
@@ -47,61 +83,53 @@ function getTakenDate($SourceImage) {
 
 function main() {
 
-    # ƒtƒHƒ‹ƒ_AƒTƒuƒtƒHƒ‹ƒ_“à‚Ìƒtƒ@ƒCƒ‹‚ğ‚·‚×‚Ä•\¦
+    # ãƒ•ã‚©ãƒ«ãƒ€ã€ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€å†…ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã™ã¹ã¦è¡¨ç¤º
     $Files = Get-ChildItem -Path $SourceFolder -Recurse | Where-Object { $_.Extension -match "(jpg|jpeg|png|gif|bmp|heic|mp4|mov|avi|wmv|flv|mkv)" }
 
-    # ƒtƒHƒ‹ƒ_AƒTƒuƒtƒHƒ‹ƒ_“à‚ÌAŠg’£q‚ªƒ}ƒbƒ`‚·‚éƒtƒ@ƒCƒ‹‚ğ‚·‚×‚Ä•\¦
-    $Pics = $Files | Where-Object { $_.Extension -match "(jpg|jpeg|png|gif|bmp|heic|mp4|mov|avi|wmv|flv|mkv)" }
+    # ãƒ•ã‚©ãƒ«ãƒ€ã€ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€å†…ã®ã€æ‹¡å¼µå­ãŒãƒãƒƒãƒã™ã‚‹ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã™ã¹ã¦è¡¨ç¤º
+    $Items = $Files | Where-Object { $_.Extension -match "(jpg|jpeg|png|gif|bmp|heic|mp4|mov|avi|wmv|flv|mkv)" }
 
-    # ƒJƒEƒ“ƒ^[ŠÖ˜A
-    $BeforePicsCount = $Pics.Count  # Ê^‚Æ“®‰æƒtƒ@ƒCƒ‹‚Ì‡Œv”
-    $SuccessCount    = 0            # ƒtƒ@ƒCƒ‹ˆÚ“®‚É¬Œ÷‚µ‚½”
+    # ã‚«ã‚¦ãƒ³ã‚¿ãƒ¼é–¢é€£
+    $BeforeFilesCount = [int32]$Files.Count  # å†™çœŸã¨å‹•ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã®åˆè¨ˆæ•°
+    $BeforeItemsCount = [int32]$Items.Count  # å†™çœŸã¨å‹•ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã®åˆè¨ˆæ•°
+    $SuccessCount     = 0                    # ãƒ•ã‚¡ã‚¤ãƒ«ç§»å‹•ã«æˆåŠŸã—ãŸæ•°
+    $FailureCount       = 0                    # ãƒ•ã‚¡ã‚¤ãƒ«ç§»å‹•ã«å¤±æ•—ã—ãŸæ•°
 
-    # ƒƒO
-    $Date = (Get-Date -Format "yyyy/MM/dd HH:mm:ss") + " >"
-    $Empty = "                     "
+    # ãƒ­ã‚°å‡ºåŠ›
+    MessageBefore $BeforeFilesCount $BeforeItemsCount
 
-    # ƒƒOo—Í
-    if ($Files.Count -eq 0) {
-        Log $LogFile "$Date ƒtƒHƒ‹ƒ_‚Í‹ó‚Å‚·B"
-    }
-
-    if ($Files.Count - $Pics.Count -gt 0){
-        Log $LogFile "$Date " + ($Files.Count - $Pics.Count) + "ŒÂ‚Ìƒtƒ@ƒCƒ‹‚ÍÊ^‚Ü‚½‚Í“®‰æƒtƒ@ƒCƒ‹‚Å‚Í‚ ‚è‚Ü‚¹‚ñB"
-    }
-
-    if ($Pics.Count -eq 0) {
-        if ($Files.Count -ne 0) {
-            Log $LogFile "$Date ˆÚ“®‚·‚éƒtƒ@ƒCƒ‹‚Í‚ ‚è‚Ü‚¹‚ñB"
-        }
-    } else {
-        Log $LogFile "$Date Ê^‚Æ“®‰æƒtƒ@ƒCƒ‹‚ÌˆÚ“®‚ğŠJn‚µ‚Ü‚·B`n$Empty ˆÚ“®‘O‚ÌƒtƒHƒ‹ƒ_: $SourceFolder`n$Empty ˆÚ“®æ‚ÌƒtƒHƒ‹ƒ_: $TargetFolder\~"
+    # ä»¥ä¸‹ã€å†™çœŸã¾ãŸã¯å‹•ç”»ãƒ•ã‚¡ã‚¤ãƒ«ãŒã‚ã‚‹ã¨ãã®ã¿å®Ÿè¡Œ
+    if ($BeforeItemsCount -gt 0) {
         
-        # ƒtƒHƒ‹ƒ_“à‚Ì‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹‚Éˆ—‚ğÀs
+        # ãƒ•ã‚©ãƒ«ãƒ€å†…ã®ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«ã«å‡¦ç†ã‚’å®Ÿè¡Œ
         $LoopIndex = 0
-        foreach ($File in $Pics) {
+        foreach ($item in $Items) {
+
+            # ãƒ—ãƒ­ã‚°ãƒ¬ã‚¹ãƒãƒ¼ã‚’è¡¨ç¤º
+            $Percent = [int32]($LoopIndex*100/$BeforeItemsCount)
+            Write-Progress -Activity "Move in Progress" -Status "$LoopIndex/$BeforeItemsCount Complete." -PercentComplete $Percent
             
-            # ì¬“ú‚ğæ“¾
-            $CreationDate = $File.CreationTime
+            # ä½œæˆæ—¥æ™‚ã‚’å–å¾—
+            $CreationDate = $item.CreationTime
             
-            # XV“ú‚ğæ“¾
-            $UpdateDate = $File.LastWriteTime
+            # æ›´æ–°æ—¥æ™‚ã‚’å–å¾—
+            $UpdateDate = $item.LastWriteTime
             
-            # B‰e“ú‚ğæ“¾
+            # æ’®å½±æ—¥æ™‚ã‚’å–å¾—
             $TakenDate = $null
-            if ($File.Extention -match "(jpg|jpeg|heic)") {
+            if ($item.Extention -match "(jpg|jpeg|heic)") {
                 
-                $SourceImage = New-Object System.Drawing.Bitmap($File.FullName)
+                $SourceImage = New-Object System.Drawing.Bitmap($item.FullName)
                 try {
-                    $SourceImage = New-Object System.Drawing.Bitmap($File.FullName)
+                    $SourceImage = New-Object System.Drawing.Bitmap($item.FullName)
                 } catch {
-                    Log $LogFile "$Date $File ‚Ì“Ç‚İ‚İ‚É¸”s‚µ‚Ü‚µ‚½B"
+                    Log "$item ã®èª­ã¿è¾¼ã¿ã«å¤±æ•—ã—ã¾ã—ãŸã€‚"
                 }
-                $TakenDate = getTakenDate $SourceImage
+                $TakenDate = GetTakenDate $SourceImage
                 $SourceImage.Dispose()
             }
 
-            # Å‚àŒÃ‚¢“ú‚ğæ“¾
+            # æœ€ã‚‚å¤ã„æ—¥æ™‚ã‚’å–å¾—
             $OldestDate = $CreationDate
             if ($UpdateDate -lt $OldestDate) {
                 $OldestDate = $UpdateDate
@@ -112,64 +140,50 @@ function main() {
                 }
             }
             
-            # ”NŒ“ú‚ğæ“¾
+            # å¹´æœˆæ—¥ã‚’å–å¾—
             $Year  = $OldestDate.Year.ToString()
             $Month = $OldestDate.Month.ToString("00")
             $Day   = $OldestDate.Day.ToString("00")
             
-            # Ši”[æ‚ÌƒpƒX‚ğì¬
-            $SubDirectory = "$Year\$Month\$Year-$Month-$Day"
-            $TargetDirectory = "$TargetFolder\$SubDirectory"
+            # æ ¼ç´å…ˆã®ãƒ‘ã‚¹ã‚’ä½œæˆ
+            $SubPath = "$Year\$Month\$Year-$Month-$Day"
+            $TargetPath = "$TargetFolder\$SubPath"
             
-            # ƒtƒHƒ‹ƒ_‚ª‘¶İ‚µ‚È‚¢ê‡‚Íì¬
-            if (!(Test-Path $TargetDirectory)) {
+            # ãƒ•ã‚©ãƒ«ãƒ€ãŒå­˜åœ¨ã—ãªã„å ´åˆã¯ä½œæˆ
+            if (!(Test-Path $TargetPath)) {
                 try {
-                    New-Item -ItemType Directory -Path $TargetDirectory | Out-Null
+                    # New-Item -ItemType Directory -Path $TargetPath | Out-Null
                     
-                    # Log $LogFile "$Date $TargetDirectory ‚ğì¬‚µ‚Ü‚µ‚½B"
+                    # Log "$TargetPath ã‚’ä½œæˆã—ã¾ã—ãŸã€‚"
                     
                 } catch {
-                    Log $LogFile "$Date $TargetDirectory ‚ğì¬‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B"
+                    Log "$TargetPath ã‚’ä½œæˆã§ãã¾ã›ã‚“ã§ã—ãŸã€‚"
                 }
             }
             
-            # ƒƒO‚Éo—Í‚·‚éƒtƒ@ƒCƒ‹–¼‚ğì¬
-            if ($File.Name.Length -gt 30) {
-                # ’·‚¢•¶š—ñ‚ğ30‚ÅƒJƒbƒg‚µ‚Ä‹ó”’–„‚ß
-                $PaddedFileName = $File.Name.Remove(30).PadRight(30)
+            # ãƒ­ã‚°ã«å‡ºåŠ›ã™ã‚‹ãƒ•ã‚¡ã‚¤ãƒ«åã‚’ä½œæˆ
+            if ($item.Name.Length -gt 30) {
+                $PaddedFileName = $item.Name.Remove(30).PadRight(30)   # é•·ã„æ–‡å­—åˆ—ã‚’30ã§ã‚«ãƒƒãƒˆã—ã¦ç©ºç™½åŸ‹ã‚
             } else {
-                # ‹ó”’–„‚ß
-                $PaddedFileName = $File.Name.PadRight(30)
+                $PaddedFileName = $item.Name.PadRight(30)              # ç©ºç™½åŸ‹ã‚
             }
             
-            # ƒtƒ@ƒCƒ‹‚ğˆÚ“®
+            # ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ç§»å‹•
             try {
-                Move-Item -Path $File.FullName -Destination $TargetDirectory
+                # Move-Item -Path $item.FullName -Destination $TargetPath
                 
-                # Log $LogFile "$Date $PaddedFileName ‚Í ~\$SubDirectory ‚ÖˆÚ“®‚³‚ê‚Ü‚µ‚½B"
+                # Log "$PaddedFileName ã¯ ~\$SubPath ã¸ç§»å‹•ã•ã‚Œã¾ã—ãŸã€‚"
                 $SuccessCount++
             } catch {
-                Log $LogFile "$Date $PaddedFileName ‚Í ~\$TargetDirectory ‚Ö‚ÌˆÚ“®‚É¸”s‚µ‚Ü‚µ‚½B"
+                Log "$PaddedFileName ã¯ ~\$TargetPath ã¸ã®ç§»å‹•ã«å¤±æ•—ã—ã¾ã—ãŸã€‚"
+                $FailureCount++
             }
             
-            # ƒvƒƒOƒŒƒXƒo[‚ğ•\¦
             $LoopIndex++
-            $Percent = [int32]($LoopIndex*100/$BeforePicsCount)
-            Write-Progress -Activity "Move in Progress" -Status "$LoopIndex/$BeforePicsCount Complete." -PercentComplete $Percent
         }
         
-        # ƒƒOo—Í
-        # ƒtƒHƒ‹ƒ_AƒTƒuƒtƒHƒ‹ƒ_“à‚Ìƒtƒ@ƒCƒ‹
-        $Files = Get-ChildItem -Path $SourceFolder -Recurse | Where-Object { $_.Extension -match "(jpg|jpeg|png|gif|bmp|heic|mp4|mov|avi|wmv|flv|mkv)" }
-
-        # ƒtƒHƒ‹ƒ_AƒTƒuƒtƒHƒ‹ƒ_“à‚ÌAŠg’£q‚ªƒ}ƒbƒ`‚·‚éƒtƒ@ƒCƒ‹
-        $Pics = $Files | Where-Object { $_.Extension -match "(jpg|jpeg|png|gif|bmp|heic|mp4|mov|avi|wmv|flv|mkv)" }
-
-        Log $LogFile "$Date $SuccessCount ŒÂ‚Ìƒtƒ@ƒCƒ‹‚ÌˆÚ“®‚ªŠ®—¹‚µ‚Ü‚µ‚½B"
-        
-        if ($Pics.Count -ne 0) {
-            Log $LogFile ("$Date " + [String]$Pics.Count + " ŒÂ‚Ìƒtƒ@ƒCƒ‹‚ÍˆÚ“®‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B")
-        }
+        # ãƒ­ã‚°å‡ºåŠ›
+        MessageAfter $SuccessCount $FailureCount
     }
 }
 
