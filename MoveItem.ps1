@@ -20,7 +20,7 @@ function Log($str) {
         
     # ログファイルを出力
     if ($LogFileFlag) {
-        Add-Content $str -Path $LogFilePath -Encoding UTF8
+        Add-Content $date$str -Path $LogFilePath -Encoding UTF8
     }
 }
 
