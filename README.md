@@ -10,20 +10,25 @@ Windowsのフォルダにある写真と動画を日時で仕分けするPowerSh
 1. タスクスケジューラを設定する。
     1. Windows画面下部の検索バーで「タスクスケジューラ」と検索し実行する。
     1. 右側のメニューから「基本タスクの作成」をクリックする。
-    1. 名前と説明を適当に入力する。
+    1. 名前と説明を適当に入力する。例
+       名前
        ```
-       例
-       名前：MoveItem-Picture
-       説明：C:\Users\UserName\Pictures\UploadからC:\Users\UserName\Picturesへ写真と動画を仕分けして移動する
+       MoveItem-Picture
+       ```
+       説明
+       ```
+       C:\Users\UserName\Pictures\UploadからC:\Users\UserName\Picturesへ写真と動画を仕分けして移動する
        ```
     1. トリガーを設定する。
     1. 操作→「プログラムの開始」を選択する。
     1. プログラム/スクリプトに以下を指定する。
-
-       `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`
+       ```
+       C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+       ```
     1. 引数の追加に以下を指定する。`MoveItem.ps1` は自分で変更したファイル名を指定する。
-
-       `-Command "MoveItem.ps1"`
+       ```
+       -Command "MoveItem.ps1"
+       ```
     1. 開始に `MoveItem.ps1` が存在するディレクトリを指定する。
 
 ### 使い方
