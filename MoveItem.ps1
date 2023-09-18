@@ -1,17 +1,19 @@
-﻿# 元のファイルがあるフォルダを指定
+﻿# 仕分け前のフォルダを指定
 $SourceFolder = "C:\Users\cyan\Pictures\test\dummyfolder"
 
-# 分類されたファイルを格納するフォルダを指定
+# 仕分け後のフォルダを指定
 $TargetFolder = "C:\Users\cyan\Pictures\test\sortedfolder"
-
-# ログファイルの出力パス
-$LogFilePath = "$TargetFolder\Log.txt"
 
 # ログファイルを出力するかどうか ( $true / $false )
 $LogFileFlag = $true
 
+# ログファイルの出力パス
+$LogFilePath = "$TargetFolder\Log.txt"
+
 
 ######## ここから先はいじらない ########
+
+
 Add-Type -AssemblyName System.Drawing
 
 function Log($str) {
@@ -130,7 +132,7 @@ function GetPropDate($item, $shellObject, $flag) {
 function main() {
 
     # フォルダ、サブフォルダ内のファイルをすべて表示
-    $Files = Get-ChildItem -Path $SourceFolder -Recurse
+    $Files = Get-ChildItem -Path $SourceFolder -Recurse | Where-Object { ! $_.PsIsContainer }
 
     # フォルダ、サブフォルダ内の、拡張子がマッチするファイルをすべて表示
     $Items = $Files | Where-Object { $_.Extension -match "(jpg|jpeg|png|gif|bmp|heic|mp4|mov|avi|wmv|flv|mkv)" }
@@ -221,8 +223,6 @@ function main() {
                 }
             }
 
-            Write-Output ($item.Name + "   $OldestDate")
-            
             # 年月日を取得
             $Year  = $OldestDate.Year.ToString()
             $Month = $OldestDate.Month.ToString("00")
@@ -235,10 +235,9 @@ function main() {
             # フォルダが存在しない場合は作成
             if (!(Test-Path $TargetPath)) {
                 try {
-                    # New-Item -ItemType Directory -Path $TargetPath | Out-Null
+                    New-Item -ItemType Directory -Path $TargetPath | Out-Null
                     
                     # Log "$TargetPath を作成しました。"
-                    
                 } catch {
                     Log "$TargetPath を作成できませんでした。"
                 }
@@ -253,7 +252,7 @@ function main() {
             
             # ファイルを移動
             try {
-                # Move-Item -Path $item.FullName -Destination $TargetPath
+                Move-Item -Path $item.FullName -Destination $TargetPath
                 
                 # Log "$PaddedFileName は ~\$SubPath へ移動されました。"
                 $SuccessCount++
