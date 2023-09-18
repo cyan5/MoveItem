@@ -1,8 +1,8 @@
 ﻿# 仕分け前のフォルダを指定
-$SourceFolder = "C:\Users\cyan\Pictures\test\dummyfolder"
+$SourceFolder = "C:\Before"
 
 # 仕分け後のフォルダを指定
-$TargetFolder = "C:\Users\cyan\Pictures\test\sortedfolder"
+$TargetFolder = "C:\After"
 
 # ログファイルを出力するかどうか ( $true / $false )
 $LogFileFlag = $true
@@ -229,7 +229,7 @@ function main() {
             $Day   = $OldestDate.Day.ToString("00")
             
             # 格納先のパスを作成
-            $SubPath = "$Year\$Month\$Year-$Month-$Day"
+            $SubPath = "$Year\$Year-$Month\$Year-$Month-$Day"
             $TargetPath = "$TargetFolder\$SubPath"
             
             # フォルダが存在しない場合は作成
@@ -270,4 +270,3 @@ function main() {
 }
 
 main
-pause
