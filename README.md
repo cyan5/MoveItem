@@ -11,13 +11,15 @@ Windowsのフォルダにある写真と動画を日時で仕分けするPowerSh
     1. Windows画面下部の検索バーで「タスクスケジューラ」と検索し実行する。
     1. 右側のメニューから「基本タスクの作成」をクリックする。
     1. 名前と説明を適当に入力する。例
+
        名前
        ```
        MoveItem-Picture
        ```
        説明
        ```
-       C:\Users\UserName\Pictures\UploadからC:\Users\UserName\Picturesへ写真と動画を仕分けして移動する
+       C:\Users\UserName\Pictures\Upload から
+       C:\Users\UserName\Pictures へ写真と動画を仕分けして移動する
        ```
     1. トリガーを設定する。
     1. 操作→「プログラムの開始」を選択する。
